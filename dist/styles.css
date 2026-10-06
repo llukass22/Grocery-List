@@ -78,3 +78,14 @@
 @media(max-width:700px){.title-row .eyebrow{font-size:14px;line-height:1.5}}
 .brand-dot{color:#dc8765}
 [data-theme=dark] .brand-dot{color:#39ff14}
+
+[hidden]{display:none!important}
+.unlock-panel{max-width:480px;margin:60px auto;padding:28px}
+.unlock-panel h1{font-size:30px;line-height:1.2}
+.unlock-panel p{margin:18px 0;line-height:1.5}
+.unlock-form{display:flex;flex-direction:column;gap:14px}
+.unlock-form input{font:inherit;padding:12px;border:1px solid var(--border,#ccc);border-radius:10px;background:transparent;color:inherit}
+.unlock-form .add-button{justify-content:center;padding:14px}
+#unlock-error{color:#b84232}
+.import-button{margin-bottom:16px}
+@media(max-width:550px){.unlock-panel{margin:28px 16px}.header-actions{flex-wrap:wrap}.header-actions .local-badge{font-size:11px}}

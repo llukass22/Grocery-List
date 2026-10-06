@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS basket_lists (
+  id TINYINT UNSIGNED PRIMARY KEY
+) ENGINE=InnoDB;
+INSERT IGNORE INTO basket_lists (id) VALUES (1);
+
+CREATE TABLE IF NOT EXISTS basket_items (
+  id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+  list_id TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  name VARCHAR(120) NOT NULL,
+  quantity TINYINT UNSIGNED NOT NULL,
+  done BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  CONSTRAINT basket_items_list FOREIGN KEY (list_id) REFERENCES basket_lists(id),
+  INDEX basket_items_order (list_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
