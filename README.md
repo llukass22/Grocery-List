@@ -38,3 +38,27 @@ Run `npm run check` for syntax checks and `npm test` for API tests. API tests us
 - Database transactions serialize writes to protect clearing against concurrent additions or unchecking.
 
 This configuration serves one household. To host unrelated households, extend the schema and authorization with separate accounts and memberships first. Login attempts are capped globally at 30/minute per server process; use hosting-level protection if exposing the application at a larger scale.
+
+## Windows local development helpers
+
+The optional scripts in `scripts` run a local MariaDB 11.8.9 instance from `.local-db` on `127.0.0.1:3307` and start the app for Windows development. The database is `basket_local`; the app uses a limited `basket_app` account. `.env` and `.local-db` contain local configuration and credentials and are excluded from Git. Do not upload them to hosting.
+
+These helpers are Windows-only and are separate from cloud deployment. The cloud host should start the app with `npm start`; do not configure it to run `scripts/local.ps1`.
+
+From the `basket` directory, use PowerShell 7 (`pwsh`):
+
+```powershell
+pwsh -File .\scripts\local.ps1 start
+pwsh -File .\scripts\local.ps1 status
+pwsh -File .\scripts\local.ps1 stop
+```
+
+The start command runs MariaDB and Basket in hidden background processes, checks readiness, and uses the bundled Node.js runtime when available (otherwise it requires installed Node.js 22+). Closing the terminal does not stop them. They are not Windows services and do not start automatically after restarting the computer. The stop command shuts the database down cleanly. Data stays in `.local-db/data` across restarts. Local runtime logs are in `.local-db`.
+
+To unlock the app, open `.env` and copy the value after `SHARED_PASSWORD=`. Changing it requires stopping and starting the app. `scripts/local-admin.cjs` is strictly local setup tooling and reads the local root credential in `.local-db/admin.json`; the application itself never uses that credential.
+
+The portable installation follows the official Windows ZIP instructions: https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/installing-mariadb/binary-packages/installing-mariadb-windows-zip-packages
+
+### Additional development origins
+
+To open the development app through another host or port, add its full origin to `APP_ALLOWED_ORIGINS` in `.env` and restart the app. Origins must match exactly; production additional origins must use HTTPS.
