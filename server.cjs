@@ -12,6 +12,12 @@ function createServer(store, env = process.env) {
   if (!env.SHARED_PASSWORD || env.SHARED_PASSWORD.length < 12) throw new Error('SHARED_PASSWORD must be at least 12 characters.');
   if (!env.SESSION_SECRET || env.SESSION_SECRET.length < 32) throw new Error('SESSION_SECRET must be at least 32 characters.');
   const origin = new URL(env.APP_ORIGIN).origin;
+  const allowedOrigins = new Set([origin]);
+  for (const value of (env.APP_ALLOWED_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean)) {
+    const address = new URL(value);
+    if (!['http:', 'https:'].includes(address.protocol) || (env.NODE_ENV === 'production' && address.protocol !== 'https:')) throw new Error('Allowed app origins must use HTTP locally or HTTPS in production.');
+    allowedOrigins.add(address.origin);
+  }
   const secure = new URL(origin).protocol === 'https:';
   if (env.NODE_ENV === 'production' && !secure) throw new Error('APP_ORIGIN must use HTTPS in production.');
   const sessionKey = crypto.createHmac('sha256', env.SESSION_SECRET).update(env.SHARED_PASSWORD).digest();
@@ -48,7 +54,7 @@ function createServer(store, env = process.env) {
       const pathname = new URL(req.url, origin).pathname;
       if (pathname.startsWith('/api/')) {
         if (!['GET', 'POST', 'PATCH', 'DELETE'].includes(req.method)) throw fail(405, 'Method not allowed.');
-        if (req.method !== 'GET' && req.headers.origin !== origin) throw fail(403, 'Request origin is not allowed.');
+        if (req.method !== 'GET' && !allowedOrigins.has(req.headers.origin)) throw fail(403, 'This address is not enabled for the shared list. Open the configured app address.');
         if (pathname === '/api/session' && req.method === 'GET') return json(200, {authenticated: authenticated(req)});
         if (pathname === '/api/session' && req.method === 'POST') {
           if (Date.now() - loginWindow > 60000) { loginWindow = Date.now(); loginAttempts = 0; }

@@ -81,3 +81,16 @@ test('login attempts are limited',async t=>{
   for(let i=0;i<30;i++)assert.equal((await request(server,'POST','/api/session',{password:'wrong'})).status,401);
   assert.equal((await request(server,'POST','/api/session',{password:'wrong'})).status,429);
 });
+
+test('explicit additional origins work while other hosts and ports are rejected',async t=>{
+  const localOrigin='http://192.0.2.1:5191';
+  const server=await fixture(t,memoryStore(),{...env,APP_ALLOWED_ORIGINS:localOrigin+',http://localhost:5191'});
+  const result=await request(server,'POST','/api/session',{password:env.SHARED_PASSWORD},undefined,localOrigin);
+  assert.equal(result.status,200);
+  const cookie=result.headers['set-cookie'][0].split(';')[0];
+  assert.equal((await request(server,'POST','/api/items',{items:[{id:'lan-item',name:'Milk',quantity:1,done:false}]},cookie,localOrigin)).status,200);
+  assert.equal((await request(server,'POST','/api/session',{password:env.SHARED_PASSWORD},undefined,'http://192.0.2.2:5191')).status,403);
+  assert.equal((await request(server,'POST','/api/session',{password:env.SHARED_PASSWORD},undefined,'http://192.0.2.1:5192')).status,403);
+  assert.equal((await request(server,'POST','/api/session',{password:env.SHARED_PASSWORD},undefined,'null')).status,403);
+  assert.throws(()=>createServer(memoryStore(),{...env,APP_ORIGIN:'https://basket.example',NODE_ENV:'production',APP_ALLOWED_ORIGINS:localOrigin}),/HTTPS/);
+});
