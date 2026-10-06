@@ -12,4 +12,4 @@ http.createServer((req,res) => {
     if (error) { res.writeHead(404); res.end('Not found'); return; }
     res.writeHead(200, {'Content-Type':types[path.extname(target)] || 'application/octet-stream'}); res.end(data);
   });
-}).listen(5187, '127.0.0.1', () => console.log('Basket is ready at http://127.0.0.1:5187'));
+}).listen(5187, '0.0.0.0', () => console.log('Basket is ready at http://localhost:5187 (also accessible on the local network)'));

@@ -5,6 +5,7 @@ A mobile-first grocery list built with HTML, CSS, and JavaScript. No build step 
 Run `npm start` and open http://127.0.0.1:5187. Run `npm run check` to check JavaScript syntax.
 
 - Add free-text items and choose quantities from 1–10.
+- Toggle dark mode in the header; your preference is saved on this device. The first visit follows your system theme.
 - Tap an item to check or uncheck it; checked items stay on the list.
 - Remove individual items with the × button.
 - Clear the list when every item is checked.

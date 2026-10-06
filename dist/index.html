@@ -3,10 +3,17 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#244f3d"><meta name="description" content="A simpler grocery run. Build your shopping list, choose quantities, and check things off as you go.">
+  <script>
+    (() => {
+      let theme;
+      try { theme = localStorage.getItem('basket-theme-v1'); } catch {}
+      document.documentElement.dataset.theme = theme === 'dark' || theme === 'light' ? theme : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    })();
+  </script>
   <title>Basket — Your grocery list</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="header"><div class="header-inner"><a class="brand" href="./" aria-label="Basket home"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 9 4-6m10 6-4-6M3 9h18l-2 11H5L3 9Zm6 4v3m6-3v3"/></svg></span>basket<span class="brand-dot">.</span></a><span class="header-note">A little list. A lighter day.</span><span class="local-badge"><span></span> Saved on this device</span></div></header>
+  <header class="header"><div class="header-inner"><a class="brand" href="./" aria-label="Basket home"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 9 4-6m10 6-4-6M3 9h18l-2 11H5L3 9Zm6 4v3m6-3v3"/></svg></span>basket<span class="brand-dot">.</span></a><span class="header-note">A little list. A lighter day.</span><div class="header-actions"><span class="local-badge"><span></span> Saved on this device</span><button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Dark mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14A8.5 8.5 0 0 1 10 3.5 8.5 8.5 0 1 0 20.5 14Z"/></svg><span>Dark mode</span></button></div></div></header>
   <main>
     <div class="title-row"><div><p class="eyebrow">LET’S GET THE GOOD STUFF</p><h1>My grocery list<span>.</span></h1><p class="intro">Less remembering. More getting on with your day.</p></div><span class="title-art" aria-hidden="true">🛒</span></div>
     <section class="list-card" aria-labelledby="list-title">

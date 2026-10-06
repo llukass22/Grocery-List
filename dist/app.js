@@ -10,6 +10,23 @@ const catalog = [
   {name:'Alcohol',icon:'🍷',description:'Something to raise a glass to.',items:['Beer','Wine','Hot Wine']}
 ];
 const $ = id => document.getElementById(id);
+const themeKey = 'basket-theme-v1';
+function applyTheme(theme) {
+  const dark = theme === 'dark';
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  $('theme-toggle').setAttribute('aria-pressed', String(dark));
+  $('theme-toggle').title = dark ? 'Switch to light mode' : 'Switch to dark mode';
+  document.querySelector('meta[name="theme-color"]').content = dark ? '#1c1c1c' : '#244f3d';
+}
+applyTheme(document.documentElement.dataset.theme);
+$('theme-toggle').addEventListener('click', () => {
+  const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(theme);
+  try { localStorage.setItem(themeKey, theme); } catch {}
+});
+window.addEventListener('storage', event => {
+  if (event.key === themeKey) applyTheme(event.newValue === 'dark' || event.newValue === 'light' ? event.newValue : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+});
 const storageKey = 'basket-grocery-list-v1';
 let shoppingList = [];
 let storageAvailable = true;
