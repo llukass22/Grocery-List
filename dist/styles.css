@@ -76,3 +76,5 @@
   .progress-copy{font-size:14px;line-height:1.5;flex-wrap:wrap}
 }
 @media(max-width:700px){.title-row .eyebrow{font-size:14px;line-height:1.5}}
+.brand-dot{color:#dc8765}
+[data-theme=dark] .brand-dot{color:#39ff14}
