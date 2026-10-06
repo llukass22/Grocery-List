@@ -65,7 +65,7 @@ function updateSelection(){const count=selections.size;$('selection-summary').te
 function renderCategory(){
   document.querySelectorAll('.category-tab').forEach(button=>{const active=button.dataset.category===activeCategory;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});
   const category=catalog.find(c=>c.name===activeCategory);$('category-panel').setAttribute('aria-labelledby',`tab-${category.name}`);
-  $('panel-icon').textContent=category.icon;$('category-title').textContent=category.name;$('category-description').textContent=category.description;$('category-count').textContent=`${category.items.length} essentials`;
+  $('panel-icon').textContent=category.icon;$('category-title').textContent=category.name;$('category-description').textContent=`${category.items.length} ${category.items.length === 1 ? 'essential' : 'essentials'}`;
   const holder=$('category-items');holder.replaceChildren();
   for(const name of category.items){
     const row=document.createElement('div');row.className='product-row';const label=document.createElement('label');label.className='product-choice';
