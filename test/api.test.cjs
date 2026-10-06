@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
-const {createServer} = require('../server.cjs');
+const {createServer} = require('../app.cjs');
 const env = {SHARED_PASSWORD:'a-private-household-password',SESSION_SECRET:'test-session-secret-with-at-least-32-characters',APP_ORIGIN:'http://localhost:5187'};
 function request(server, method, pathname, data, cookie, origin = env.APP_ORIGIN) {
   return new Promise((resolve,reject) => {

@@ -6,14 +6,14 @@ A mobile-first grocery list using a Node.js API and a Hostinger MySQL-compatible
 
 1. In hPanel, create a database and database user under **Websites → Dashboard → Databases → Management**. Copy the full database name and username, including Hostinger's prefixes, and the database host provided for your application.
 2. Open phpMyAdmin for that database and import `schema.sql`. This creates the tables without deleting existing data.
-3. Deploy the **basket directory as a Node.js application**, including `dist`, `server.cjs`, `database.cjs`, `package.json`, and `package-lock.json`. Select Node.js 22 or newer, set the application root to this directory, install with `npm ci`, and start with `npm start` (`server.cjs` is the entry point). There is no frontend build step. This now requires a running Node.js backend; uploading only `dist` is insufficient.
+3. Deploy the **basket directory as a Node.js application**, including `dist`, `server.cjs`, `app.cjs`, `database.cjs`, `package.json`, and `package-lock.json`. Select Node.js 22 or newer, set the application root to this directory, install with `npm ci`, and start with `npm start` (`server.cjs` is the entry point). There is no frontend build step. This now requires a running Node.js backend; uploading only `dist` is insufficient.
 4. Set environment variables in the application's deployment settings using `.env.example` as a reference:
    - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: use your Hostinger database details. Port is normally 3306; verify the host in hPanel.
    - `SHARED_PASSWORD`: a long private household password, at least 12 characters.
    - `SESSION_SECRET`: at least 32 random characters. Generate it locally with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
    - `APP_ORIGIN`: your full public HTTPS origin, e.g. `https://groceries.example.com` (no path). Use the canonical domain; writes from another origin are rejected.
    - `NODE_ENV=production`. Hostinger may supply `PORT`; the server uses it automatically.
-5. Enable HTTPS and restart the application after configuring environment variables. Startup checks the database/schema and fails if they are unavailable.
+5. Enable HTTPS and restart the application after configuring environment variables. The entry point starts listening immediately, including when Hostinger loads it as a module. It then checks the database/schema and shuts down with a logged error if they are unavailable.
 6. Open the website on two devices, unlock both with the household password, add an item on one device, and confirm it appears on the other within roughly five seconds. Check the row in phpMyAdmin. Test quantity changes, checking off, deleting, and clearing.
 
 Official Hostinger connection instructions: https://www.hostinger.com/support/connecting-a-hostinger-mysql-database-to-a-node-js-application/
