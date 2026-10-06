@@ -1,0 +1,6 @@
+{
+  "name": "basket-grocery-list",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {"start": "node server.cjs", "check": "node --check dist/app.js"}
+}
