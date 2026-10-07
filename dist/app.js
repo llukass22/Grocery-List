@@ -1,7 +1,7 @@
 'use strict';
 const catalog = [
   {name:'Meat',icon:'🥩',description:'Something hearty for the table.',items:['Chicken','Beef','Pork','Tuna','Salmon','Deli Meats']},
-  {name:'Vegetables',icon:'🥬',description:'A little fresh goes a long way.',items:['Potatoes','Tomatoes','Onions','Cucumbers','Brussel Sprouts','Spring Onions']},
+  {name:'Vegetables',icon:'🥬',description:'A little fresh goes a long way.',items:['Potatoes','Hash Browns','Tomatoes','Onions','Cucumbers','Brussel Sprouts','Spring Onions']},
   {name:'Dairy',icon:'🥛',description:'Your fridge-door favorites.',items:['Milk','Coffee Creamer','Sour Cream','Eggs','Protein Yoghurt','Cottage Cheese','Butter','Cheese']},
   {name:'Grain',icon:'🌾',description:'The staples that make a meal.',items:['Rice','Porridge','Pasta']},
   {name:'Snacks',icon:'🍿',description:'For the moments in between.',items:['Crisps','Olives','Dips','Ice Cream']},
