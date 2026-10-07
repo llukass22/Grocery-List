@@ -22,6 +22,21 @@ async function fixture(t,store=memoryStore(),config=env) {
 }
 async function login(server){const result=await request(server,'POST','/api/session',{password:env.SHARED_PASSWORD});assert.equal(result.status,200);return result.headers['set-cookie'][0].split(';')[0];}
 
+test('PWA assets are public with correct content types; session expiry is exposed without the cookie',async t=>{
+  const server=await fixture(t);
+  for(const [asset,type] of [['/manifest.webmanifest','application/manifest+json'],['/sw.js','text/javascript'],['/icon-192.png','image/png'],['/icon-512.png','image/png'],['/apple-touch-icon.png','image/png']]){
+    const result=await request(server,'GET',asset);assert.equal(result.status,200);assert.ok(result.headers['content-type'].startsWith(type));assert.equal(result.headers['cache-control'],'no-cache');
+  }
+  const manifest=(await request(server,'GET','/manifest.webmanifest')).body;
+  assert.equal(manifest.display,'standalone');assert.equal(manifest.start_url,'/');
+  assert.equal((await request(server,'GET','/offline.js')).status,404);
+  const cookie=await login(server);
+  const session=await request(server,'GET','/api/session',undefined,cookie);
+  assert.equal(session.body.authenticated,true);assert.equal(session.body.expiresAt,Number(cookie.split('=')[1].split('.')[0]));
+  assert.equal(session.headers['cache-control'],'no-store');
+  assert.deepEqual((await request(server,'GET','/api/session')).body,{authenticated:false,expiresAt:null});
+});
+
 test('private list: auth, cookie tampering, CSRF, secret-file isolation',async t=>{
   const server=await fixture(t);
   assert.equal((await request(server,'GET','/api/items')).status,401);
@@ -33,7 +48,10 @@ test('private list: auth, cookie tampering, CSRF, secret-file isolation',async t
   assert.equal((await request(server,'DELETE','/api/items',undefined,cookie,null)).status,403);
   for(const pathname of ['/.env','/server.cjs','/schema.sql','/%2e%2e/package.json'])assert.equal((await request(server,'GET',pathname)).status,404);
   assert.equal((await request(server,'GET','/')).status,200);
-  assert.equal((await request(server,'DELETE','/api/session',undefined,cookie)).headers['set-cookie'][0].includes('Max-Age=0'),true);
+  const removedLock=await request(server,'DELETE','/api/session',undefined,cookie);
+  assert.equal(removedLock.status,404);
+  assert.equal(removedLock.headers['set-cookie'],undefined);
+  assert.equal((await request(server,'GET','/api/session',undefined,cookie)).body.authenticated,true);
 });
 
 test('two devices share item operations; retries do not duplicate imported items',async t=>{

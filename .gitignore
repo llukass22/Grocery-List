@@ -82,7 +82,8 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+# This project has no build step: dist contains the maintained frontend.
+!dist/
 .output
 
 # Gatsby files

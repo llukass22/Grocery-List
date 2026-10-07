@@ -10,10 +10,13 @@
       document.documentElement.dataset.theme = theme === 'dark' || theme === 'light' ? theme : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     })();
   </script>
-  <title>Basket — Your grocery list</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css">
+  <title>Basket — Your grocery list</title><link rel="icon" href="favicon.svg?v=2" type="image/svg+xml"><link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="/manifest.webmanifest?v=2"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+  <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Basket">
 </head>
 <body>
-  <header class="header"><div class="header-inner"><a class="brand" href="./" aria-label="Basket home"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 9 4-6m10 6-4-6M3 9h18l-2 11H5L3 9Zm6 4v3m6-3v3"/></svg></span>basket<span class="brand-dot">.</span></a><span class="header-note">A little list. A lighter day.</span><div class="header-actions"><button id="logout" class="clear-button" type="button" hidden>Lock list</button><span class="local-badge"><span></span> Private shared list</span><button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Dark mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14A8.5 8.5 0 0 1 10 3.5 8.5 8.5 0 1 0 20.5 14Z"/></svg><span>Dark mode</span></button></div></div></header>
+  <header class="header"><div class="header-inner"><a class="brand" href="./" aria-label="Basket home"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 9 4-6m10 6-4-6M3 9h18l-2 11H5L3 9Zm6 4v3m6-3v3"/></svg></span>basket<span class="brand-dot">.</span></a><span class="header-note">A little list. A lighter day.</span><div class="header-actions"><span class="local-badge"><span></span> Private shared list</span><button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Dark mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14A8.5 8.5 0 0 1 10 3.5 8.5 8.5 0 1 0 20.5 14Z"/></svg><span>Dark mode</span></button></div></div></header>
+  <div class="pwa-bar"><p id="connection-status" role="status" aria-live="polite" hidden></p><button id="install-app" class="clear-button" type="button" hidden>Install Basket</button><p id="install-help" hidden>To install Basket on iPhone or iPad, open it in Safari, tap Share, then Add to Home Screen.</p></div>
   <section id="unlock-panel" class="unlock-panel list-card" aria-labelledby="unlock-title">
     <h1 id="unlock-title">Your shared grocery list.</h1><p>Enter your household password to open the list on this device.</p>
     <form id="unlock-form" class="unlock-form"><label for="shared-password">Household password</label><input id="shared-password" type="password" autocomplete="current-password" required maxlength="256"><button class="add-button" type="submit">Open list</button></form>

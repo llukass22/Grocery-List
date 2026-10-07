@@ -26,6 +26,17 @@ Install dependencies with `npm ci`, copy `.env.example` to `.env`, configure a l
 
 Run `npm run check` for syntax checks and `npm test` for API tests. API tests use an in-memory store to check access control, input validation, shared item operations, and error handling; they do not verify a real MySQL deployment. Finish the two-device database smoke test above after deploying.
 
+## Installing Basket
+
+Basket can be installed as a Progressive Web App. Deploy the full updated `basket` directory, including all files in `dist`, and use HTTPS.
+
+- On supported browsers, choose **Install Basket** when it appears, or use the browser's install menu. On iPhone/iPad, open Basket in Safari and choose **Share → Add to Home Screen**. Installation options vary by browser.
+- An internet connection is required to open, sync, and edit the list. Basket does not cache app files or save a shared list for offline viewing. Changes require server confirmation; reconnecting refreshes the list automatically.
+- Access stays signed in on this browser until the seven-day session expires. There is no manual Lock list control.
+- On the first online load after upgrading from the offline version, Basket deletes the old saved snapshot and its app caches and unregisters its old service worker. `dist/sw.js` remains available only to retire workers on existing installations; it does not cache or intercept requests.
+
+After deployment, reopen existing installations online and reload once to pick up the updated app. Verify installation, unlocking, shared list updates, and session persistence on a phone. Moving domains requires installing again.
+
 ## Sharing and existing device lists
 
 - Add free-text items or category selections, choose quantities from 1–10, check off items, remove individual items, and clear when every item is checked.
@@ -34,7 +45,7 @@ Run `npm run check` for syntax checks and `npm test` for API tests. API tests us
 - The old device-local list is preserved until you tap **Import the list saved on this device**. Import keeps each item's ID to avoid duplication on retries. It adds to the shared list and does not replace it. For more than 100 saved items, tap again to import the next batch.
 - Local browser data belongs to its original origin. If you move to a different domain, import from the old origin before migrating or export those items separately; the new domain cannot access the old domain's local storage.
 - Theme preferences stay on each device.
-- Unlock sessions last seven days. **Lock list** removes this browser's session. Changing the household password or session secret invalidates all sessions after the server restarts.
+- Unlock sessions last seven days. Changing the household password or session secret invalidates all sessions after the server restarts.
 - Database transactions serialize writes to protect clearing against concurrent additions or unchecking.
 
 This configuration serves one household. To host unrelated households, extend the schema and authorization with separate accounts and memberships first. Login attempts are capped globally at 30/minute per server process; use hosting-level protection if exposing the application at a larger scale.

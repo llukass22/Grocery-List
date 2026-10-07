@@ -88,4 +88,8 @@
 .unlock-form .add-button{justify-content:center;padding:14px}
 #unlock-error{color:#b84232}
 .import-button{margin-bottom:16px}
+.pwa-bar{max-width:1040px;margin:12px auto;padding:0 24px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;color:var(--muted);font-size:14px;line-height:1.5}
+.pwa-bar p{margin:0;flex:1 1 240px}
+#connection-status{padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--mint)}
+.item-toggle:disabled,.remove-item:disabled{cursor:default;opacity:.65}
 @media(max-width:550px){.unlock-panel{margin:28px 16px}.header-actions{flex-wrap:wrap}.header-actions .local-badge{font-size:11px}}

@@ -4,7 +4,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const root = path.join(__dirname, 'dist');
-const types = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml'};
+const types = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.webmanifest':'application/manifest+json'};
 const fail = (status, message) => Object.assign(new Error(message), {status});
 const digest = value => crypto.createHash('sha256').update(value).digest();
 
@@ -55,7 +55,11 @@ function createServer(store, env = process.env) {
       if (pathname.startsWith('/api/')) {
         if (!['GET', 'POST', 'PATCH', 'DELETE'].includes(req.method)) throw fail(405, 'Method not allowed.');
         if (req.method !== 'GET' && !allowedOrigins.has(req.headers.origin)) throw fail(403, 'This address is not enabled for the shared list. Open the configured app address.');
-        if (pathname === '/api/session' && req.method === 'GET') return json(200, {authenticated: authenticated(req)});
+        if (pathname === '/api/session' && req.method === 'GET') {
+          const valid = authenticated(req);
+          const expiresAt = valid ? Number(/(?:^|;\s*)basket_session=(\d+)\./.exec(req.headers.cookie || '')[1]) : null;
+          return json(200, {authenticated: valid, expiresAt});
+        }
         if (pathname === '/api/session' && req.method === 'POST') {
           if (Date.now() - loginWindow > 60000) { loginWindow = Date.now(); loginAttempts = 0; }
           if (++loginAttempts > 30) throw fail(429, 'Too many login attempts. Try again in a minute.');
@@ -63,11 +67,7 @@ function createServer(store, env = process.env) {
           if (typeof data?.password !== 'string' || !crypto.timingSafeEqual(digest(data.password), digest(env.SHARED_PASSWORD))) throw fail(401, 'Incorrect password.');
           const expires = String(Date.now() + maxAge * 1000);
           res.setHeader('Set-Cookie', cookie(`${expires}.${sign(expires)}`, maxAge));
-          return json(200, {authenticated: true});
-        }
-        if (pathname === '/api/session' && req.method === 'DELETE') {
-          res.setHeader('Set-Cookie', cookie('', 0));
-          return json(200, {authenticated: false});
+          return json(200, {authenticated: true, expiresAt: Number(expires)});
         }
         if (!authenticated(req)) throw fail(401, 'Unlock the shared list first.');
         if (pathname === '/api/items' && req.method === 'GET') return json(200, {items: await store.read()});
@@ -89,7 +89,7 @@ function createServer(store, env = process.env) {
       if (!['GET', 'HEAD'].includes(req.method)) throw fail(405, 'Method not allowed.');
       // Only public assets are served; credentials and server files stay private.
       const file = pathname === '/' ? 'index.html' : pathname.slice(1);
-      if (!['index.html','app.js','styles.css','favicon.svg'].includes(file)) throw fail(404, 'Not found.');
+      if (!['index.html','app.js','styles.css','favicon.svg','manifest.webmanifest','sw.js','icon-192.png','icon-512.png','apple-touch-icon.png'].includes(file)) throw fail(404, 'Not found.');
       const data = await fs.readFile(path.join(root, file));
       res.writeHead(200, {'Content-Type':types[path.extname(file)], 'Cache-Control':'no-cache'});
       res.end(req.method === 'HEAD' ? undefined : data);
