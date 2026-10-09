@@ -7,7 +7,8 @@ const catalog = [
   {name:'Snacks',icon:'🍿',description:'For the moments in between.',items:['Crisps','Olives','Dips','Ice Cream']},
   {name:'Fruits',icon:'🍒',description:'A sweet addition to your day.',items:['Fruit Jam','Grapes','Bananas']},
   {name:'Drinks',icon:'🧃',description:'Keep your favorites on hand.',items:['Kvass','Juice']},
-  {name:'Alcohol',icon:'🍷',description:'Something to raise a glass to.',items:['Beer','Wine','Hot Wine']}
+  {name:'Alcohol',icon:'🍷',description:'Something to raise a glass to.',items:['Beer','Wine','Hot Wine']},
+  {name:'Pantry',icon:'🧺',description:'Everyday essentials for your home.',items:['Toothpaste','Toilet Paper','Toilet Wet Wipes','Foil','Baking Paper','Dish Soap','Kurmis','Olive Oil','Salt','Pepper','Chicken Spices']}
 ];
 const $ = id => document.getElementById(id);
 const themeKey = 'basket-theme-v1';
