@@ -3,7 +3,7 @@ const catalog = [
   {name:'Meat',icon:'🥩',description:'Something hearty for the table.',items:['Chicken','Beef','Pork','Tuna','Salmon','Deli Meats']},
   {name:'Vegetables',icon:'🥬',description:'A little fresh goes a long way.',items:['Potatoes','Hash Browns','Tomatoes','Onions','Cucumbers','Brussel Sprouts','Spring Onions']},
   {name:'Dairy',icon:'🥛',description:'Your fridge-door favorites.',items:['Milk','Coffee Creamer','Sour Cream','Eggs','Protein Yoghurt','Cottage Cheese','Butter','Cheese']},
-  {name:'Grain',icon:'🌾',description:'The staples that make a meal.',items:['Rice','Porridge','Pasta']},
+  {name:'Grain',icon:'🌾',description:'The staples that make a meal.',items:['Rice','Porridge','Pasta','Tortilla','Paratha Bread']},
   {name:'Snacks',icon:'🍿',description:'For the moments in between.',items:['Crisps','Olives','Dips','Ice Cream']},
   {name:'Fruits',icon:'🍒',description:'A sweet addition to your day.',items:['Fruit Jam','Grapes','Bananas']},
   {name:'Drinks',icon:'🧃',description:'Keep your favorites on hand.',items:['Kvass','Juice']},
