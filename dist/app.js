@@ -85,10 +85,10 @@ function renderList(){
     row.append(toggle,quantity,remove);holder.append(row);
   }
   const total=shoppingList.length,done=shoppingList.filter(i=>i.done).length;
-  $('list-count').textContent=`${total} ${total===1?'item':'items'}`;
   $('empty-state').hidden=total>0;$('progress-section').hidden=total===0;
   $('progress-text').textContent=`${done} of ${total} items in the basket`;
   $('progress-fill').style.width=`${total?done/total*100:0}%`;
+  $('clear-list').hidden=total===0 || done!==total;
   $('clear-list').disabled=!canEdit() || total===0 || done!==total;
   $('clear-list').title=total>0&&done===total?'Clear your completed shopping list':'Check off every item to clear the list';
 }
