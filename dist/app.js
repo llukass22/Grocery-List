@@ -31,8 +31,8 @@ window.addEventListener('storage', event => {
 const storageKey = 'basket-grocery-list-v1';
 let shoppingList = [];
 let connected = false, unlocked = false, busy = false, refreshing = false, generation = 0;
-let sessionExpiresAt = 0, checkingSession = false;
-function canEdit() { return unlocked && sessionExpiresAt>Date.now() && connected && navigator.onLine && !busy; }
+let checkingSession = false;
+function canEdit() { return unlocked && connected && navigator.onLine && !busy; }
 // Remove data left by discontinued offline and manual locking features.
 try { for(const key of ['basket-offline-list-v1','basket-pending-lock-v1','basket-session-lock'])localStorage.removeItem(key); } catch {}
 let legacyItems = [];
@@ -48,7 +48,7 @@ function updateStorageLabel(){
   if(!status.textContent)status.hidden=true;
   $('add-form').querySelector('button').disabled=!canEdit();$('import-local').disabled=!canEdit();
 }
-function showSession(value){unlocked=value;$('basket-app').hidden=!value;$('unlock-panel').hidden=value;$('import-local').hidden=!value||!legacyItems.length;if(!value){generation++;sessionExpiresAt=0;shoppingList=[];connected=false;}renderList();updateSelection();updateStorageLabel();}
+function showSession(value){unlocked=value;$('basket-app').hidden=!value;$('unlock-panel').hidden=value;$('import-local').hidden=!value||!legacyItems.length;if(!value){generation++;shoppingList=[];connected=false;}renderList();updateSelection();updateStorageLabel();}
 async function api(url,method='GET',data){
   const response=await fetch(url,{method,credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(15000),headers:data?{'Content-Type':'application/json'}:{},body:data?JSON.stringify(data):undefined});
   const result=await response.json();
@@ -57,7 +57,6 @@ async function api(url,method='GET',data){
 }
 async function refresh(){
   if(!unlocked||busy||refreshing||document.hidden)return;
-  if(sessionExpiresAt<=Date.now()){showSession(false);return;}
   if(!navigator.onLine){connected=false;renderList();updateSelection();updateStorageLabel();return;}
   refreshing=true;const version=generation;
   try{const result=await api('/api/items');if(version===generation&&unlocked){connected=true;shoppingList=result.items;}}
@@ -115,7 +114,7 @@ $('add-form').addEventListener('submit',async event=>{event.preventDefault();con
 $('item-name').addEventListener('input',()=> $('item-name').setCustomValidity(''));
 $('add-selected').addEventListener('click',async()=>{if(!selections.size)return;const batch=[...selections.values()];if(await addItems(batch)){for(const item of batch){if(selections.get(item.name)===item)selections.delete(item.name);}renderCategory();}});
 $('clear-list').addEventListener('click',async()=>{if(!shoppingList.length || !shoppingList.every(i=>i.done))return;if(await mutate('/api/items','DELETE')){notify('List cleared. Ready for your next shop.');$('item-name').focus();}});
-$('unlock-form').addEventListener('submit',async event=>{event.preventDefault();if(checkingSession||busy)return;const version=generation;const button=$('unlock-form').querySelector('button');button.disabled=true;$('unlock-error').textContent='';try{const session=await api('/api/session','POST',{password:$('shared-password').value});if(version!==generation)return;sessionExpiresAt=session.expiresAt;$('shared-password').value='';showSession(true);await refresh();}catch(error){$('unlock-error').textContent=error.message;}finally{button.disabled=false;}});
+$('unlock-form').addEventListener('submit',async event=>{event.preventDefault();if(checkingSession||busy)return;const version=generation;const button=$('unlock-form').querySelector('button');button.disabled=true;$('unlock-error').textContent='';try{await api('/api/session','POST',{password:$('shared-password').value});if(version!==generation)return;$('shared-password').value='';showSession(true);await refresh();}catch(error){$('unlock-error').textContent=error.message;}finally{button.disabled=false;}});
 $('import-local').addEventListener('click',async()=>{if(await mutate('/api/items','POST',{items:legacyItems.slice(0,100)})){legacyItems=legacyItems.slice(100);try{localStorage.setItem(storageKey,JSON.stringify(legacyItems));}catch{}$('import-local').hidden=!legacyItems.length;notify(legacyItems.length?'Items imported. Tap again to import the rest.':'Your device list is now shared.');}});
 updateStorageLabel();renderList();renderCategory();
 async function checkSession(){
@@ -124,7 +123,7 @@ async function checkSession(){
   checkingSession=true;const version=generation;$('unlock-form').querySelector('button').disabled=true;
   try{
     const session=await api('/api/session');if(version!==generation)return;
-    sessionExpiresAt=session.expiresAt;showSession(session.authenticated);$('unlock-error').textContent='';await refresh();
+    showSession(session.authenticated);$('unlock-error').textContent='';await refresh();
   }catch(error){if(version===generation){connected=false;$('unlock-error').textContent='Cannot reach the server. Reconnect to unlock your list.';}}
   finally{checkingSession=false;$('unlock-form').querySelector('button').disabled=false;updateStorageLabel();}
 }

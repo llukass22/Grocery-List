@@ -2,6 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
+const crypto = require('node:crypto');
 const {createServer} = require('../app.cjs');
 const env = {SHARED_PASSWORD:'a-private-household-password',SESSION_SECRET:'test-session-secret-with-at-least-32-characters',APP_ORIGIN:'http://localhost:5187'};
 function request(server, method, pathname, data, cookie, origin = env.APP_ORIGIN) {
@@ -22,7 +23,7 @@ async function fixture(t,store=memoryStore(),config=env) {
 }
 async function login(server){const result=await request(server,'POST','/api/session',{password:env.SHARED_PASSWORD});assert.equal(result.status,200);return result.headers['set-cookie'][0].split(';')[0];}
 
-test('PWA assets are public with correct content types; session expiry is exposed without the cookie',async t=>{
+test('PWA assets are public with correct content types; persistent session status does not expose the cookie',async t=>{
   const server=await fixture(t);
   for(const [asset,type] of [['/manifest.webmanifest','application/manifest+json'],['/sw.js','text/javascript'],['/icon-192.png','image/png'],['/icon-512.png','image/png'],['/apple-touch-icon.png','image/png']]){
     const result=await request(server,'GET',asset);assert.equal(result.status,200);assert.ok(result.headers['content-type'].startsWith(type));assert.equal(result.headers['cache-control'],'no-cache');
@@ -32,9 +33,49 @@ test('PWA assets are public with correct content types; session expiry is expose
   assert.equal((await request(server,'GET','/offline.js')).status,404);
   const cookie=await login(server);
   const session=await request(server,'GET','/api/session',undefined,cookie);
-  assert.equal(session.body.authenticated,true);assert.equal(session.body.expiresAt,Number(cookie.split('=')[1].split('.')[0]));
+  assert.deepEqual(session.body,{authenticated:true,expiresAt:null});
   assert.equal(session.headers['cache-control'],'no-store');
   assert.deepEqual((await request(server,'GET','/api/session')).body,{authenticated:false,expiresAt:null});
+});
+
+test('sessions have no fixed timeout, renew their browser cookie, and survive server restarts',async t=>{
+  let now=Date.now();t.mock.method(Date,'now',()=>now);
+  const server=await fixture(t);
+  const result=await request(server,'POST','/api/session',{password:env.SHARED_PASSWORD});
+  assert.deepEqual(result.body,{authenticated:true,expiresAt:null});
+  assert.match(result.headers['set-cookie'][0],/; Max-Age=31536000(?:;|$)/);
+  const cookie=result.headers['set-cookie'][0].split(';')[0];
+  now+=30*24*60*60*1000;
+  const items=await request(server,'GET','/api/items',undefined,cookie);
+  assert.equal(items.status,200);
+  assert.equal(items.headers['set-cookie'][0],result.headers['set-cookie'][0]);
+  now+=2*365*24*60*60*1000;
+  const restarted=await fixture(t);
+  assert.deepEqual((await request(restarted,'GET','/api/session',undefined,cookie)).body,{authenticated:true,expiresAt:null});
+  for(const config of [{...env,SHARED_PASSWORD:env.SHARED_PASSWORD+'-changed'},{...env,SESSION_SECRET:env.SESSION_SECRET+'-changed'}]){
+    const changed=await fixture(t,memoryStore(),config);
+    assert.equal((await request(changed,'GET','/api/items',undefined,cookie)).status,401);
+  }
+});
+
+test('valid seven-day sessions upgrade automatically; expired or malformed tokens are rejected',async t=>{
+  let now=Date.now();t.mock.method(Date,'now',()=>now);
+  const server=await fixture(t);
+  const key=crypto.createHmac('sha256',env.SESSION_SECRET).update(env.SHARED_PASSWORD).digest();
+  const legacyCookie=expires=>`basket_session=${expires}.${crypto.createHmac('sha256',key).update(String(expires)).digest('hex')}`;
+  const old=legacyCookie(now+24*60*60*1000);
+  const session=await request(server,'GET','/api/session',undefined,old);
+  assert.deepEqual(session.body,{authenticated:true,expiresAt:null});
+  const upgraded=session.headers['set-cookie'][0].split(';')[0];
+  assert.match(upgraded,/^basket_session=persistent-[a-f0-9]{64}\.[a-f0-9]{64}$/);
+  const fromItems=await request(server,'GET','/api/items',undefined,old);
+  assert.equal(fromItems.status,200);assert.match(fromItems.headers['set-cookie'][0],/^basket_session=persistent-/);
+  now+=8*24*60*60*1000;
+  assert.equal((await request(server,'GET','/api/items',undefined,upgraded)).status,200);
+  for(const invalid of [old,legacyCookie(now),upgraded+'.extra',upgraded+'0','basket_session=persistent-unsigned']){
+    const result=await request(server,'GET','/api/items',undefined,invalid);
+    assert.equal(result.status,401);assert.equal(result.headers['set-cookie'],undefined);
+  }
 });
 
 test('private list: auth, cookie tampering, CSRF, secret-file isolation',async t=>{
@@ -50,7 +91,7 @@ test('private list: auth, cookie tampering, CSRF, secret-file isolation',async t
   assert.equal((await request(server,'GET','/')).status,200);
   const removedLock=await request(server,'DELETE','/api/session',undefined,cookie);
   assert.equal(removedLock.status,404);
-  assert.equal(removedLock.headers['set-cookie'],undefined);
+  assert.equal(removedLock.headers['set-cookie'][0].split(';')[0],cookie);
   assert.equal((await request(server,'GET','/api/session',undefined,cookie)).body.authenticated,true);
 });
 

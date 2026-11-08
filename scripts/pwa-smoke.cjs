@@ -53,6 +53,13 @@ const store = {read:async()=>items,add:async batch=>{items.push(...batch);return
     assert.equal(await page.evaluate(()=>localStorage.getItem('basket-offline-list-v1')),null);
     assert.equal(await page.evaluate(()=>localStorage.getItem('basket-pending-lock-v1')),null);
     assert.equal((await page.evaluate(async()=> (await (await fetch('/api/session')).json()).authenticated)),true);
+    const cookie=(await context.cookies()).find(cookie=>cookie.name==='basket_session');
+    assert.ok(cookie.expires>Date.now()/1000+300*24*60*60);
+    // The browser must not lock the list when its old seven-day deadline passes.
+    await page.clock.setFixedTime(Date.now()+8*24*60*60*1000);
+    await page.evaluate(()=>refresh());
+    assert.equal(await page.locator('#unlock-panel').isHidden(),true);
+    assert.equal(await page.locator('.item-toggle').first().isEnabled(),true);
     assert.deepEqual(errors,[]);
     console.log('PWA browser checks passed: installation manifest, offline cache cleanup, online reconnection, persistent sessions and no Lock list controls.');
   } finally {if(browser)await browser.close();await new Promise(resolve=>app.close(resolve));}

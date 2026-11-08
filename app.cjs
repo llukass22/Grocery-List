@@ -22,13 +22,19 @@ function createServer(store, env = process.env) {
   if (env.NODE_ENV === 'production' && !secure) throw new Error('APP_ORIGIN must use HTTPS in production.');
   const sessionKey = crypto.createHmac('sha256', env.SESSION_SECRET).update(env.SHARED_PASSWORD).digest();
   const sign = value => crypto.createHmac('sha256', sessionKey).update(value).digest('hex');
-  const maxAge = 7 * 24 * 60 * 60;
-  const cookie = (value, age) => `basket_session=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${age}${secure ? '; Secure' : ''}`;
-  function authenticated(req) {
+  // Keep the cookie across browser restarts and renew it whenever the app is used.
+  // The signed session itself has no time limit.
+  const cookieMaxAge = 365 * 24 * 60 * 60;
+  const cookie = value => `basket_session=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${cookieMaxAge}${secure ? '; Secure' : ''}`;
+  const newSession = () => `persistent-${crypto.randomBytes(32).toString('hex')}`;
+  function readSession(req) {
     const token = /(?:^|;\s*)basket_session=([^;]*)/.exec(req.headers.cookie || '')?.[1] || '';
-    const [expires, signature] = token.split('.');
-    if (!/^\d+$/.test(expires || '') || !/^[a-f0-9]{64}$/.test(signature || '')) return false;
-    return Number(expires) > Date.now() && crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(sign(expires), 'hex'));
+    const match = /^(persistent-[a-f0-9]{64}|\d+)\.([a-f0-9]{64})$/.exec(token);
+    if (!match) return null;
+    const [, value, signature] = match;
+    // Upgrade still-valid sessions issued before persistent sign-in was added.
+    if (!value.startsWith('persistent-') && (!Number.isSafeInteger(Number(value)) || Number(value) <= Date.now())) return null;
+    return crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(sign(value), 'hex')) ? value : null;
   }
   let loginWindow = 0, loginAttempts = 0;
   async function body(req) {
@@ -55,21 +61,24 @@ function createServer(store, env = process.env) {
       if (pathname.startsWith('/api/')) {
         if (!['GET', 'POST', 'PATCH', 'DELETE'].includes(req.method)) throw fail(405, 'Method not allowed.');
         if (req.method !== 'GET' && !allowedOrigins.has(req.headers.origin)) throw fail(403, 'This address is not enabled for the shared list. Open the configured app address.');
+        const session = readSession(req);
+        if (session) {
+          const value = session.startsWith('persistent-') ? session : newSession();
+          res.setHeader('Set-Cookie', cookie(`${value}.${sign(value)}`));
+        }
         if (pathname === '/api/session' && req.method === 'GET') {
-          const valid = authenticated(req);
-          const expiresAt = valid ? Number(/(?:^|;\s*)basket_session=(\d+)\./.exec(req.headers.cookie || '')[1]) : null;
-          return json(200, {authenticated: valid, expiresAt});
+          return json(200, {authenticated: Boolean(session), expiresAt: null});
         }
         if (pathname === '/api/session' && req.method === 'POST') {
           if (Date.now() - loginWindow > 60000) { loginWindow = Date.now(); loginAttempts = 0; }
           if (++loginAttempts > 30) throw fail(429, 'Too many login attempts. Try again in a minute.');
           const data = await body(req);
           if (typeof data?.password !== 'string' || !crypto.timingSafeEqual(digest(data.password), digest(env.SHARED_PASSWORD))) throw fail(401, 'Incorrect password.');
-          const expires = String(Date.now() + maxAge * 1000);
-          res.setHeader('Set-Cookie', cookie(`${expires}.${sign(expires)}`, maxAge));
-          return json(200, {authenticated: true, expiresAt: Number(expires)});
+          const value = newSession();
+          res.setHeader('Set-Cookie', cookie(`${value}.${sign(value)}`));
+          return json(200, {authenticated: true, expiresAt: null});
         }
-        if (!authenticated(req)) throw fail(401, 'Unlock the shared list first.');
+        if (!session) throw fail(401, 'Unlock the shared list first.');
         if (pathname === '/api/items' && req.method === 'GET') return json(200, {items: await store.read()});
         if (pathname === '/api/items' && req.method === 'POST') {
           const data = await body(req);
