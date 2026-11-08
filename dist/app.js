@@ -88,7 +88,6 @@ function renderList(){
   $('list-count').textContent=`${total} ${total===1?'item':'items'}`;
   $('empty-state').hidden=total>0;$('progress-section').hidden=total===0;
   $('progress-text').textContent=`${done} of ${total} items in the basket`;
-  $('progress-message').textContent=done===total?'All done. Happy cooking!':'You’ve got this.';
   $('progress-fill').style.width=`${total?done/total*100:0}%`;
   $('clear-list').disabled=!canEdit() || total===0 || done!==total;
   $('clear-list').title=total>0&&done===total?'Clear your completed shopping list':'Check off every item to clear the list';
