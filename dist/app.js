@@ -108,6 +108,15 @@ function renderCategory(){
   }updateSelection();
 }
 for(const category of catalog){const button=document.createElement('button');button.type='button';button.className='category-tab';button.dataset.category=category.name;button.id=`tab-${category.name}`;button.setAttribute('role','tab');button.setAttribute('aria-controls','category-panel');const icon=document.createElement('span');icon.className='category-emoji';icon.setAttribute('aria-hidden','true');icon.textContent=category.icon;const label=document.createElement('span');label.textContent=category.name;button.append(icon,label);button.addEventListener('click',()=>{activeCategory=category.name;renderCategory();});button.addEventListener('keydown',event=>{const index=catalog.indexOf(category);let next;if(event.key==='ArrowRight')next=(index+1)%catalog.length;if(event.key==='ArrowLeft')next=(index-1+catalog.length)%catalog.length;if(event.key==='Home')next=0;if(event.key==='End')next=catalog.length-1;if(next!==undefined){event.preventDefault();activeCategory=catalog[next].name;renderCategory();document.getElementById(`tab-${activeCategory}`).focus();}});$('categories').append(button);}
+const categoryToggle=$('category-toggle');
+const categoryContent=$('category-content');
+categoryToggle.addEventListener('click',()=>{
+  const open=categoryToggle.getAttribute('aria-expanded')!=='true';
+  if(!open && categoryContent.contains(document.activeElement))categoryToggle.focus();
+  categoryToggle.setAttribute('aria-expanded',String(open));
+  categoryContent.dataset.open=String(open);
+  categoryContent.inert=!open;
+});
 options($('item-quantity'));
 $('add-form').addEventListener('submit',async event=>{event.preventDefault();const input=$('item-name');const name=input.value.trim();if(!name){input.setCustomValidity('Enter an item name.');input.reportValidity();return;}input.setCustomValidity('');if(await addItems([{name,quantity:Number($('item-quantity').value)}])){if(input.value.trim()===name)input.value='';$('item-quantity').value=1;input.focus();}});
 $('item-name').addEventListener('input',()=> $('item-name').setCustomValidity(''));

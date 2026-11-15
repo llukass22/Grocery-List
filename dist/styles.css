@@ -98,3 +98,15 @@
 @media(max-width:550px){.unlock-panel{margin:28px 16px}.header-actions{flex-wrap:wrap}.header-actions .local-badge{font-size:11px}}
 .list-card>.add-form{margin-top:24px}
 @media(max-width:700px){.list-card>.add-form{margin-top:16px}}
+
+/* Category accordion animates its natural height, including category changes. */
+.browse-heading h2{width:100%}
+.category-toggle{display:flex;align-items:center;gap:14px;width:100%;padding:8px 0;border:0;background:transparent;color:inherit;font:inherit;letter-spacing:inherit;text-align:left}
+.category-toggle>span:first-child{flex:1}
+.category-toggle .browse-note{font-family:DM Sans,sans-serif;font-weight:400;letter-spacing:normal}
+.category-toggle svg{width:24px;height:24px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .32s ease}
+.category-toggle[aria-expanded=true] svg{transform:rotate(180deg)}
+.category-accordion{display:grid;grid-template-rows:0fr;opacity:0;visibility:hidden;transition:grid-template-rows .32s ease,opacity .24s ease,visibility 0s .32s}
+.category-accordion[data-open=true]{grid-template-rows:1fr;opacity:1;visibility:visible;transition:grid-template-rows .32s ease,opacity .24s ease,visibility 0s}
+.category-accordion-inner{min-height:0;overflow:hidden}
+
